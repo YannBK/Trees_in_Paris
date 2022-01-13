@@ -1,4 +1,4 @@
-table{
+/* table{
     margin: 10px;
     border: 1px solid black;
     padding: 10px;
@@ -8,4 +8,95 @@ th,td{
     padding: 5px 10px;
     border: thin solid #333;
     text-align: center;
+} */
+
+video{
+    object-fit: cover;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+
+}
+#map{
+    width: 800px; 
+    height: 600px;
+    border-radius: 0 0 30px 30px;
+}
+#nav{
+    display: flex;
+    align-items: center;
+    justify-content:space-evenly;
+    background-color: yellowgreen;
+    border-radius: 50px 50px 0 0;
+    height: 70px
+    opacity: 0.9;
+}
+select{
+    height: 30px;
+    border-radius: 5px;
+    border: none;
+    margin: 10px 0 10px 5px;
+    font-size: 1.2rem;
+}
+label{
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+#intro{
+    position: fixed;
+    top:50%;
+    left:50%;
+    transform: translate(-50%,-50%);
+    text-align: center;
+
+}
+#finintro{
+    width: 500px;
+    height:70px;
+    background-color: rgba(200,200,200,0.4);
+    border-radius: 50px;
+    font-size: 1.7rem;
+    font-weight: bold;
+    border: none;
+    color: #333;
+    transition : 0.3s ease-in;
+
+}
+#finintro:hover{
+    transition : 0.3s ease-in;
+    background-color: rgba(200,200,200,0.8);
+    cursor: pointer;
+}
+/* #finintro:active{
+    box-shadow: white 5px 5px 5px 5px;
+} */
+#resultat{
+    position:fixed;
+    top:1000px;
+    transform: translate(-50%,-50%);
+    /* animation: apparition 2s linear forwards; */
+}
+@keyframes apparition{
+    0%{
+        top:800px;
+        opacity:0.2;}
+    40%{
+        top:-600px;
+        opacity:0.5;}
+    65%{
+        top:200px;
+        opacity:0.7;}
+    90%{
+        top:-50px;
+        opacity:0.9;}
+    100%{
+        top:0;
+        opacity:1;}
+}
+@keyframes disparition{
+    0%{opacity:1;}
+    50%{opacity:0.5;}
+    100%{opacity:0.1;}
 }
