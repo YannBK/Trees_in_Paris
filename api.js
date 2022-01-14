@@ -163,8 +163,8 @@ btnIntro.addEventListener('click', async function () {
         }
     )
     //création select
-    creerSelects(json, 'selectgenre', 'genre', 'Tri par genre')
-    creerSelects(json, 'selectfrance', 'libellefrancais', 'Tri par nom français');
+    creerSelects(json, 'selectgenre', 'genre', 'Genre')
+    creerSelects(json, 'selectfrance', 'libellefrancais', 'Nom français');
     creerSelectsCirconf(['selectmin', 'selectmax'], ['Circonférence min', 'Circonférence max']);
     //animations fun, ou pas
     btnIntro.style.animation = "disparition 0.5s linear forwards";
