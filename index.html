@@ -5,24 +5,31 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="api.css">
+    <link rel="stylesheet" href="./api.css">
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300&display=swap" rel="stylesheet">
     <title>Document</title>
 </head>
 
 <body>
-    <video playsinline autoplay muted loop poster="fond.PNG" id="bgvid">
-        <source src="trees-84143_A6Alyd98.mp4" type="video/mp4">
+    <video playsinline autoplay muted loop poster="./fond.PNG" id="bgvid">
+        <source src="./trees-84143_A6Alyd98.mp4" type="video/mp4">
         <!--auteur : josephphackney de pixabay-->
     </video>
-
-    <div id="intro">
-        <input type="button" value="Agrémenter vos balades franciliennes" id="finintro">
+    <div id="ecran1" class="ecran">
+        <div id="intro">
+            <input type="button" value="Agrémentez vos balades franciliennes" id="finintro">
+        </div>
         <div id="resultat"></div>
     </div>
+    <div id="ecran2" class="ecran">
+        <h2>Prochainement plus de détails pour vos pérégrinations parisiennes</h2>
+        <div id="tableau"></div>
+    </div>
 
-    <script src="api.js"></script>
+    <script src="./api.js"></script>
 </body>
-
 </html>

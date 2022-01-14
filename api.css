@@ -1,15 +1,21 @@
-/* table{
-    margin: 10px;
-    border: 1px solid black;
-    padding: 10px;
-    border-collapse: collapse;
-}
-th,td{
-    padding: 5px 10px;
-    border: thin solid #333;
-    text-align: center;
-} */
 
+body{
+    margin : 0;
+    padding: 0;
+    font-family: 'Lato', sans-serif;/*pas super*/
+}
+.ecran{
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    background-position: top;
+    background-size: cover;
+}
+
+/*_____écran principal_____*/
 video{
     object-fit: cover;
     width: 100vw;
@@ -17,43 +23,24 @@ video{
     position: fixed;
     top: 0;
     left: 0;
-
 }
-#map{
-    width: 800px; 
-    height: 600px;
-    border-radius: 0 0 30px 30px;
-}
-#nav{
+#ecran1{
+    height: 100vh;
     display: flex;
     align-items: center;
-    justify-content:space-evenly;
-    background-color: yellowgreen;
-    border-radius: 50px 50px 0 0;
-    height: 70px
-    opacity: 0.9;
-}
-select{
-    height: 30px;
-    border-radius: 5px;
-    border: none;
-    margin: 10px 0 10px 5px;
-    font-size: 1.2rem;
-}
-label{
-    font-size: 1.2rem;
-    font-weight: bold;
+    justify-content: center;
+    position: relative;
 }
 #intro{
+    text-align: center;
+}
+/*bouton d'intro*/
+#finintro{
     position: fixed;
     top:50%;
     left:50%;
     transform: translate(-50%,-50%);
-    text-align: center;
-
-}
-#finintro{
-    width: 500px;
+    width: 550px;
     height:70px;
     background-color: rgba(200,200,200,0.4);
     border-radius: 50px;
@@ -62,22 +49,78 @@ label{
     border: none;
     color: #333;
     transition : 0.3s ease-in;
-
 }
 #finintro:hover{
     transition : 0.3s ease-in;
     background-color: rgba(200,200,200,0.8);
     cursor: pointer;
 }
-/* #finintro:active{
-    box-shadow: white 5px 5px 5px 5px;
-} */
+/*affichage*/
 #resultat{
-    position:fixed;
+    position: relative;
     top:1000px;
-    transform: translate(-50%,-50%);
-    /* animation: apparition 2s linear forwards; */
 }
+#map{
+    width: 800px; 
+    height: 600px;
+}
+#nav{
+    display: flex;
+    align-items: center;
+    justify-content:space-evenly;
+    background-color: yellowgreen;
+    border-radius: 50px 50px 0 0;
+    height: 70px;
+    opacity: 0.9;
+}
+#pied{
+    display: flex;
+    align-items: center;
+    justify-content:space-evenly;
+    background-color: yellowgreen;
+    border-radius: 0 0 50px 50px;
+    height: 70px;
+    opacity: 0.9;
+}
+/*slects de la "nav"*/
+.box-div {
+    height: 70px;
+    display: flex;
+    align-items: baseline;
+    padding: 0 10px;
+}
+.box-div:hover {
+    /* background-color: rgb(126, 189, 0);  */
+}
+.box-choice {
+    display: flex;
+}
+.box-none {
+    display: none;
+}
+#selectgenregenre #checkselectgenre:checked ~ div,
+#selectfrancelibellefrancais #checkselectfrance:checked ~ div {
+    display: flex;
+}
+.div-choix {
+    display: none;
+}
+select{
+    height: 30px;
+    border-radius: 5px;
+    border: transparent 2px solid;
+    margin: 10px 5px 10px 15px;
+    font-size: 1.2rem;
+}
+select:hover,select:focus{
+    border: #333 2px solid;
+    cursor: pointer;
+}
+label{
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+/*animations d'apparition*/
 @keyframes apparition{
     0%{
         top:800px;
@@ -100,3 +143,29 @@ label{
     50%{opacity:0.5;}
     100%{opacity:0.1;}
 }
+
+/*_____écran du tableau______*/
+#ecran2{
+    height: max-content;
+    background: url("./fond-papier-noir-black---101-bd-p-image-51331-grande.jpg") no-repeat center;
+    background-size: cover;
+    background-attachment: fixed;
+    color: whitesmoke;
+    flex-direction: column;
+}
+table{
+    margin: 0 40px 20px 20px;
+    border: 1px solid black;
+    padding: 10px;
+    border-collapse: collapse;
+}
+th,td{
+    padding: 5px 10px;
+    border: thin solid #333;
+    text-align: center;
+}
+th:hover{
+    cursor: pointer;
+    background-color: #333;
+}
+
