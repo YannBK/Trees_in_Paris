@@ -1,7 +1,5 @@
-//TODO trouver une petite fonctionnalité pour atteindre les 400 lignes?
 
 const btnIntro = document.getElementById('finintro');
-const resultat = document.getElementById('resultat');
 
 let datas;
 let source = 0; //pour rafraichir la map
@@ -14,7 +12,7 @@ class Arbres {
         this.type = 'Feature',
             this.properties = {
                 description:
-                    `<strong>${genre} ${esp} ${variete}</strong><p>${francais}</p><p>Adresse : ${adresse}</p><p>Hauteur : ${haut}m, Circonférence : ${circonf}cm</p><p>Année de plantation : ${date}</p>`
+                    `<h3>${genre} ${esp} ${variete}</h3><p>${francais}</p><p>Adresse : ${adresse}</p><p>Hauteur : ${haut}m, Circonférence : ${circonf}cm</p><p>Année de plantation : ${date}</p>`
             },
             this.geometry = {
                 type: 'Point',
@@ -23,7 +21,7 @@ class Arbres {
     }
 }
 
-//mise à jour de la map, de la source, etc
+//mise à jour de la map
 function miseAJour(src) {
     if (src != 1) {
         map.removeLayer(`${src - 1}`);
@@ -67,7 +65,7 @@ function miseAJour(src) {
 }
 
 //création des datas de la map
-async function showData(tri) {
+async function createData(tri) {
     //récupération données
     let url = `https://opendata.paris.fr/api/records/1.0/search/?dataset=arbresremarquablesparis&q=&rows=10000&facet=libellefrancais&facet=genre&facet=espece&facet=stadedeveloppement&facet=varieteoucultivar&facet=dateplantation`;
     const data = await fetch(url);
@@ -106,6 +104,7 @@ async function showData(tri) {
                     }
                     arbre = new Arbres(json.records[i].fields.adresse, json.records[i].fields.circonferenceencm, annee, json.records[i].fields.espece, json.records[i].fields.genre, json.records[i].fields.hauteurenm, json.records[i].fields.libellefrancais, json.records[i].geometry.coordinates, variet);
                     //pour l'affichage du tableau
+
                     arrArbresTableau.push(json.records[i].fields);
                 }
             }
@@ -122,61 +121,136 @@ async function showData(tri) {
     };
     //pour gérer les sources identiques de la map
     source++;
+    //pour gérer le tri des variétés (ou presque)
+    for(let i = 0; i<arrArbresTableau.length; i++){
+        if(arrArbresTableau[i].varieteoucultivar==undefined){
+            arrArbresTableau[i].varieteoucultivar = " ";
+        }
+    }
 
     return arrArbres, arrArbresTableau;
 }
 
-//au click du bouton de la page d'intro, affichage et création de la totalité
-btnIntro.addEventListener('click', async function () {
-    //récupération données
-    let url = `https://opendata.paris.fr/api/records/1.0/search/?dataset=arbresremarquablesparis&q=&rows=10000&facet=libellefrancais&facet=genre&facet=espece&facet=stadedeveloppement&facet=varieteoucultivar&facet=dateplantation`;
-    const data = await fetch(url);
-    const json = await data.json();
-    console.log(json)
-    //création nav + map + pied
-    let nav = document.createElement('div');
-    nav.setAttribute('id', 'nav');
-    let divMap = document.createElement('div');
-    divMap.setAttribute('id', 'map');
-    let pied = document.createElement('div');
-    pied.setAttribute('id', 'pied');
-    //insertion nav + map
-    resultat.appendChild(nav);
-    resultat.appendChild(divMap);
-    resultat.appendChild(pied);
-    //initialisation map
-    mapboxgl.accessToken = 'pk.eyJ1IjoieWFubmJldHQiLCJhIjoiY2t5Y3B4OXJvMGFocTJ2cm04eGUzMGlobCJ9.3Ukk2dIMB7THGu_fNhX4-A';
-    map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [2.34, 48.86],
-        zoom: 11
-    });
-    //ajout zoom et +
-    map.addControl(new mapboxgl.NavigationControl());
-    //changement icone
-    map.loadImage(
-        '22330deciduoustree_98753.png',
-        (error, image) => {
-            if (error) throw error;
-            map.addImage('tree', image);
-        }
-    )
-    //création select
-    creerSelects(json, 'selectgenre', 'genre', 'Genre')
-    creerSelects(json, 'selectfrance', 'libellefrancais', 'Nom français');
-    creerSelectsCirconf(['selectmin', 'selectmax'], ['Circonférence min', 'Circonférence max']);
-    //animations fun, ou pas
-    btnIntro.style.animation = "disparition 0.5s linear forwards";
-    setTimeout(function () {
-        resultat.style.animation = "apparition 2.5s linear forwards";//c'est mon PC ou ce n'est pas fluide, il y avait un truc pour ça...
-        btnIntro.style.display = "none";
-    }, 500)
+//Pour Formater Les String En Title Case => cf tableau()
+function titleCase(str) {
+    return str.split(' ').map(item =>
+        item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(' ');
+}
 
-    await showData('tout');
-    miseAJour(source);
-    tableau(arrArbresTableau);
-})
+//pour trier le tableau => cf tableau()
+let modulo = {
+    "adresse": 0,
+    "arrondissement": 0,
+    "libellefrancais": 0,
+    "genre": 0,
+    "espece": 0,
+    "varieteoucultivar": 0,
+    "hauteurenm": 0,
+    "circonferenceencm": 0,
+    "dateplantation": 0,
+    "domanialite": 0
+}
+
+//création tableau des données affichées
+function tableau(arr) {
+    //réinitialisation de la zone
+    let divTableau = document.getElementById('tableau');
+    let titre = document.querySelector('h2');
+    divTableau.innerHTML = "";
+    titre.innerHTML = 'Et voici';
+
+    //création tableau + en-tête
+    let table = document.createElement('table');
+    table.id = 'table';
+
+    let entete = "";
+    if (document.body.clientWidth < 1000) {
+        entete = '<tr><th id="adresse" class="btntri">Adresse</th><th id="arrondissement" class="btntri">Arrondissement</th><th id="libellefrancais" class="btntri">Nom français</th><th id="genre" class="btntri">Genre</th><th id="espece" class="btntri">Espèce</th><th id="hauteurenm" class="btntri">Hauteur (m)</th><th id="circonferenceencm" class="btntri">Circonférence (cm)</th><th id="dateplantation" class="btntri">Année de plantation</th></tr>';
+    }
+    else {
+        entete = '<tr><th id="adresse" class="btntri">Adresse</th><th id="arrondissement" class="btntri">Arrondissement</th><th id="libellefrancais" class="btntri">Nom français</th><th id="genre" class="btntri">Genre</th><th id="espece" class="btntri">Espèce</th><th id="varieteoucultivar" class="btntri">Variété</th><th id="hauteurenm" class="btntri">Hauteur (m)</th><th id="circonferenceencm" class="btntri">Circonférence (cm)</th><th id="dateplantation" class="btntri">Année de plantation</th><th id="domanialite" class="btntri">Domaine</th></tr>';
+    }
+    table.innerHTML = entete;
+
+    //formatage des données et création des lignes
+    let i = 0;
+    arr.map(el => {
+        let annee = "";
+        let arrond = titleCase(el.arrondissement);
+        let variet = "";
+        let adress = titleCase(el.adresse);
+        let domain = el.domanialite;
+        //reformatage de la date
+        for (let k = 0; k < 4; k++) {
+            annee += el.dateplantation[k];
+        }
+        //reformatage arrondissement
+        if (el.arrondissement.includes(' ARRDT')) {
+            arrond = titleCase(el.arrondissement.replace(' ARRDT', ""));
+        }
+        //reformatage variété
+        if (el.varieteoucultivar != undefined) {
+            variet = el.varieteoucultivar;
+        }
+        //reformatage adresse
+        if (el.adresse.includes(' D ')) {
+            adress = titleCase(el.adresse.replace(' D ', " D'"));
+        }
+        else if (el.adresse.includes('L ')) {
+            adress = titleCase(el.adresse.replace(' L ', " L'"));
+        }
+        //reformatage domanialité
+        if (el.domanialite.includes('CIMETIERE')) {
+            domain = titleCase(el.domanialite);
+        }
+        //enfin la ligne! d'où l'intérêt de créer des bases de données avec des données uniformisées et exploitables
+        let tr = document.createElement('tr');
+        if (i % 2 == 0) {
+            tr.style.backgroundColor = "#111";
+        }
+
+        let ligne = "";
+        if (document.body.clientWidth < 1000) {
+            ligne = `<td>${adress}</td><td>${arrond}</td><td>${el.libellefrancais}</td><td>${el.genre}</td><td>${el.espece}</td><td>${toString(el.hauteurenm)}</td><td>${el.circonferenceencm}</td><td>${annee}</td>`;
+        }
+        else {
+            ligne = `<td>${adress}</td><td>${arrond}</td><td>${el.libellefrancais}</td><td>${el.genre}</td><td>${el.espece}</td><td>${variet}</td><td>${el.hauteurenm}</td><td>${el.circonferenceencm}</td><td>${annee}</td><td>${domain}</td>`;
+        }
+        tr.innerHTML = ligne;
+
+        table.appendChild(tr);
+        i++;//d'où l'intérêt de map vs for, mais j'ai du mal m'y prendre
+    });
+
+    divTableau.appendChild(table);
+
+    //écouteur pour trier le tableau
+    let btnTri = document.querySelectorAll('.btntri');
+    btnTri.forEach(el => {
+        el.addEventListener('click', function () {
+            let arrT;
+            if (modulo[this.id] % 2 == 0) {
+                if(this.id!='hauteurenm' && this.id!='circonferenceencm'){
+                    arrT = arr.sort((a, b) => a[this.id].localeCompare(b[this.id]))
+                }
+                else{
+                    arrT = arr.sort((a, b) => a[this.id] - b[this.id]);
+                }
+                modulo[this.id]++;
+            }
+            else{
+                if(this.id!='hauteurenm' && this.id!='circonferenceencm'){
+                    arrT = arr.sort((a, b) => b[this.id].localeCompare(a[this.id]))
+                }
+                else{
+                    arrT = arr.sort((a, b) => b[this.id] - a[this.id]);
+                }
+                modulo[this.id]++;
+            }
+            tableau(arrT);
+        });
+    });
+}
 
 //Création select par nom
 function creerSelects(obj, id, cat, lab) {
@@ -214,6 +288,7 @@ function creerSelects(obj, id, cat, lab) {
     let opti = document.createElement('option');
     opti.setAttribute('value', 'tout');
     opti.textContent = 'Tout';
+
     htmlSelectGenre.appendChild(opti);
 
     //tableau de la catégorie concernée
@@ -241,9 +316,9 @@ function creerSelects(obj, id, cat, lab) {
 
     //écouteur du select à l'input
     const selectGenre = document.getElementById(id);
-    selectGenre.addEventListener('change', async function () {
+    selectGenre.addEventListener('input', async function () {
         let value = this.value;
-        await showData(value);
+        await createData(value);
         miseAJour(source);
         tableau(arrArbresTableau);
     });
@@ -258,18 +333,20 @@ function creerSelectsCirconf(ids, lab) {
         labelGenre.textContent = `${lab[i]} (cm)`;
         let htmlSelectGenre = document.createElement('select');
         htmlSelectGenre.setAttribute('id', ids[i]);
-
+        //création options
         for (let k = 0; k < 701; k += 50) {
-            let opt = document.createElement('option');
-            opt.setAttribute('value', `${k}`);
-            opt.textContent = `${k}`;
-            if (ids[i] == 'selectmin' && k == 0) {
-                opt.selected = true;
+            if ((ids[i] == 'selectmin' && k != 700) || (ids[i] == 'selectmax' && k != 0)) {
+                let opt = document.createElement('option');
+                opt.setAttribute('value', `${k}`);
+                opt.textContent = `${k}`;
+                if (ids[i] == 'selectmin' && k == 0) {
+                    opt.selected = true;
+                }
+                if (ids[i] == 'selectmax' && k == 700) {
+                    opt.selected = true;
+                }
+                htmlSelectGenre.appendChild(opt);
             }
-            if (ids[i] == 'selectmax' && k == 700) {
-                opt.selected = true;
-            }
-            htmlSelectGenre.appendChild(opt);
         }
 
         //insertion html
@@ -280,6 +357,7 @@ function creerSelectsCirconf(ids, lab) {
         //écouteur du select à l'input
         const selectGenre = document.getElementById(ids[i]);
         selectGenre.addEventListener('change', async function () {
+            //appliquer le range à l'input arbre visible
             let value;
             if (document.getElementById('checkselectgenre').checked == true) {
                 value = document.getElementById('selectgenre').value;
@@ -290,106 +368,81 @@ function creerSelectsCirconf(ids, lab) {
             else {
                 value = 'tout';
             }
-            await showData(value);
+            //empêcher le min d'être supérieur au max, ou le max d'être inférieur au min, selon votre vision du monde
+            let selectMin = document.getElementById('selectmin');
+            let selectMax = document.getElementById('selectmax');
+            if (parseInt(selectMin.value) >= parseInt(selectMax.value)) {
+                if (this.id == "selectmin") {
+                    selectMax.value = `${parseInt(selectMin.value) + 50}`;
+                }
+                else {
+                    selectMin.value = `${parseInt(selectMax.value) - 50}`;
+                }
+            }
+
+            await createData(value);
             miseAJour(source);
             tableau(arrArbresTableau);
         });
     }
 }
 
-//création tableau des données affichées
-function tableau(arr) {
-    //réinitialisation de la zone
-    let divTableau = document.getElementById('tableau');
-    let titre = document.querySelector('h2');
-    divTableau.innerHTML = "";
-    titre.innerHTML = 'Et voici';
-
-    //création tableau + en-tête
-    let table = document.createElement('table');
-    table.id = 'table';
-    let entete = '<tr><th id="adresse" class="btntri">Adresse</th><th id="arrondissement" class="btntri">Arrondissement</th><th id="libellefrancais" class="btntri">Nom français</th><th id="genre" class="btntri">Genre</th><th id="espece" class="btntri">Espèce</th><th id="varieteoucultivar" class="btntri">Variété</th><th id="hauteurenm" class="btntri">Hauteur (m)</th><th id="circonferenceencm" class="btntri">Circonférence (cm)</th><th id="dateplantation" class="btntri">Année de plantation</th><th id="domanialite" class="btntri">Domaine</th></tr>';
-    table.innerHTML = entete;
-    //formatage des données et création des lignes
-    let i = 0;
-    arr.map(el => {
-        let annee = "";
-        let arrond = "";
-        let variet = "";
-        let adress = "";
-        let domain = "";
-        //reformatage de la date
-        for (let k = 0; k < 4; k++) {
-            annee += el.dateplantation[k];
-        }
-        //reformatage arrondissement
-        if (el.arrondissement.includes(' ARRDT')) {
-            arrond = titleCase(el.arrondissement.replace(' ARRDT', ""));
-        }
-        else {
-            arrond = titleCase(el.arrondissement);
-        }
-        //reformatage variété
-        if (el.varieteoucultivar != undefined) {
-            variet = el.varieteoucultivar;
-        }
-        //reformatage adresse
-        if (el.adresse.includes(' D ')) {
-            adress = titleCase(el.adresse.replace(' D ', " D'"));
-        }
-        else if (el.adresse.includes('L ')) {
-            adress = titleCase(el.adresse.replace(' L ', " L'"));
-        }
-        else {
-            adress = titleCase(el.adresse);
-        }
-        //reformatage domanialité
-        if (el.domanialite.includes('CIMETIERE')) {
-            domain = titleCase(el.domanialite);
-        }
-        else {
-            domain = el.domanialite;
-        }
-        //enfin la ligne! d'où l'intérêt de créer des bases de données avec des données uniformisées et exploitables
-        let tr = document.createElement('tr');
-        if (i % 2 == 0) {
-            tr.style.backgroundColor = "#111";
-        }
-        let ligne = `<td>${adress}</td><td>${arrond}</td><td>${el.libellefrancais}</td><td>${el.genre}</td><td>${el.espece}</td><td>${variet}</td><td>${el.hauteurenm}</td><td>${el.circonferenceencm}</td><td>${annee}</td><td>${domain}</td>`;
-        tr.innerHTML = ligne;
-        table.appendChild(tr);
-        i++;//d'où l'intérêt de map vs for, mais j'ai du mal m'y prendre
+//au click du bouton de la page d'intro, affichage et création de la totalité
+btnIntro.addEventListener('click', async function () {
+    const resultat = document.getElementById('resultat');
+    //récupération données
+    let url = `https://opendata.paris.fr/api/records/1.0/search/?dataset=arbresremarquablesparis&q=&rows=10000&facet=libellefrancais&facet=genre&facet=espece&facet=stadedeveloppement&facet=varieteoucultivar&facet=dateplantation`;
+    const data = await fetch(url);
+    const json = await data.json();
+    console.log(json)
+    //création nav + map + pied
+    let nav = document.createElement('div');
+    nav.setAttribute('id', 'nav');
+    let divMap = document.createElement('div');
+    divMap.setAttribute('id', 'map');
+    let pied = document.createElement('div');
+    pied.setAttribute('id', 'pied');
+    //insertion nav + map
+    resultat.appendChild(nav);
+    resultat.appendChild(divMap);
+    resultat.appendChild(pied);
+    //zoom de la map selon écran
+    let zoomy = 11;
+    if (document.body.clientWidth < 700) {
+        zoomy = 10;
+    }
+    //initialisation map
+    mapboxgl.accessToken = 'pk.eyJ1IjoieWFubmJldHQiLCJhIjoiY2t5Y3B4OXJvMGFocTJ2cm04eGUzMGlobCJ9.3Ukk2dIMB7THGu_fNhX4-A';
+    map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [2.34, 48.86],
+        zoom: zoomy
     });
-
-    divTableau.appendChild(table);
-
-    //écouteur pour trier le tableau
-    let btnTri = document.querySelectorAll('.btntri');
-    btnTri.forEach(el => {
-        el.addEventListener('click', function () {
-            triMoiCa(arr, this.id);
-        });
-    });
-
-    console.log(arrArbresTableau);
-}
-
-//Pour Formater Les String En Title Case
-function titleCase(str) {
-    return str.split(' ').map(item =>
-        item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(' ');
-}
-
-//pour trier le tableau
-function triMoiCa(arr, cat) {
-    let arrT = arr.sort(function compare(a, b) {
-        if (a[cat] < b[cat]) {
-            return -1;
+    //ajout zoom et +
+    map.addControl(new mapboxgl.NavigationControl());
+    //changement icone
+    map.loadImage(
+        '22330deciduoustree_98753.png',
+        (error, image) => {
+            if (error) throw error;
+            map.addImage('tree', image);
         }
-        if (a[cat] > b[cat]) {
-            return 1;
-        }
-        return 0;
-    });
-    tableau(arrT);
-}
+    )
+    //création select
+    creerSelects(json, 'selectgenre', 'genre', 'Genre')
+    creerSelects(json, 'selectfrance', 'libellefrancais', 'Nom français');
+    creerSelectsCirconf(['selectmin', 'selectmax'], ['Circonférence min', 'Circonférence max']);
+
+    await createData('tout');
+
+    //animations fun, ou pas
+    btnIntro.style.animation = "disparition 0.5s linear forwards";
+    setTimeout(function () {
+        resultat.style.animation = "apparition 2.5s linear forwards";//c'est mon PC ou ce n'est pas fluide, il y avait un truc pour ça...
+        btnIntro.style.display = "none";
+    }, 500)
+
+    miseAJour(source);
+    tableau(arrArbresTableau);
+})

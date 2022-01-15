@@ -71,7 +71,6 @@ video{
     width: 60vw; 
     height: 60vh;    
 }
-
 #nav{
     display: flex;
     align-items: center;
@@ -186,13 +185,13 @@ th:hover{
         width: 250px;
     }
     #resultat{
-        height: 80vh;
+        height: 85vh;/*why not ???*/
         width: 100vw;
         margin-right: 0;
     }
     #map{
         width: 100vw; 
-        height: 70vh;
+        height: 60vh;
     }
     #nav{
         flex-direction: column;
@@ -222,6 +221,13 @@ th:hover{
 }
 
 @media screen and (max-width: 1150px){
+    #ecran1{
+        background: url("./fond.PNG")#000 no-repeat center fixed;
+        background-size: cover;
+    }
+    video{
+        display: none;
+    }
     #resultat{
         height: 100vh;
         width: 100vw;
