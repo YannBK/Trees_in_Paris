@@ -1,12 +1,13 @@
 
 const btnIntro = document.getElementById('finintro');
 
-let datas;
+let map; //objet mapboxgl
+let datas; //données pour la map
 let source = 0; //pour rafraichir la map
-let map;
-let arrArbresTableau = [];
-let arrArbres = [];
-let myPopUp;
+let arrArbresTableau = []; //données pour tableau
+let arrArbres = []; //données pour datas
+let myPopUp; //pour mise à jour des popup de la map
+let save; //pour garder la ligne colorée lors d'un tri
 
 //class pour création des arbres => finiront dans arrArbres, qui finira dans les datas à afficher
 class Arbres {
@@ -26,8 +27,8 @@ class Arbres {
 }
 
 //décolorisation des lignes
-function coloriseRow(ligne){
-    let oldRow = ligne || document.querySelector(`[style="background-color: rgb(255, 150, 150);"]`);
+function coloriseRow() {
+    let oldRow = document.querySelector(`[style="background-color: rgb(88, 0, 0);"]`);
     if (oldRow) {
         if (((oldRow.nextSibling) && (oldRow.nextSibling.style.backgroundColor == "rgb(17, 17, 17)"))
             ||
@@ -63,7 +64,7 @@ function miseAJour(src) {
         //couleur sur la ligne de l'arbre sélectionné
         coloriseRow()
         let row = document.querySelector(`[data-number='${e.features[0].id}']`);
-        row.style.backgroundColor = "rgb(255,150,150)";
+        row.style.backgroundColor = "rgb(88, 0, 0)";
 
         // Copy coordinates array.
         const coordinates = e.features[0].geometry.coordinates.slice();
@@ -79,7 +80,7 @@ function miseAJour(src) {
             .setHTML(description)
             .addTo(map);
     });
-    
+
     //curseur=pointeur dans la map
     map.on('mouseenter', `${src}`, () => {
         map.getCanvas().style.cursor = 'pointer';
@@ -239,7 +240,7 @@ function tableau(arr) {
         let tr = document.createElement('tr');
         tr.setAttribute('data-number', el[0]);
         if (i % 2 == 0) {
-            tr.style.backgroundColor = "#111";
+            tr.style.backgroundColor = "rgb(17, 17, 17)";
         }
         i++;//d'où l'intérêt de map vs for, mais j'ai du mal m'y prendre
 
@@ -253,29 +254,33 @@ function tableau(arr) {
         tr.innerHTML = ligne;
 
         table.appendChild(tr);
-        
-        
-        tr.addEventListener('click',function(){
+
+        tr.addEventListener('click', function () {
             //affichage popup associée
-            if(myPopUp!=undefined){
+            if (myPopUp != undefined) {
                 myPopUp.remove();
             }
             let coord;
             let desc;
-            for(let i = 0; i<arrArbres.length;i++){
-                if(arrArbres[i].id==this.dataset.number){
+            for (let i = 0; i < arrArbres.length; i++) {
+                if (arrArbres[i].id == this.dataset.number) {
                     desc = arrArbres[i].properties.description;
                     coord = arrArbres[i].geometry.coordinates;
                 }
             }
             myPopUp = new mapboxgl.Popup()
-            .setLngLat(coord)
-            .setHTML(desc)
-            .addTo(map);
+                .setLngLat(coord)
+                .setHTML(desc)
+                .addTo(map);
 
-            //colorisation de la ligne
-            coloriseRow()
-            this.style.backgroundColor = "rgb(255,150,150)";
+            //colorisation / décolorisation de la ligne
+            if (this.style.backgroundColor == "rgb(88, 0, 0)") {
+                coloriseRow();
+                myPopUp.remove();
+            }
+            else {
+                this.style.backgroundColor = "rgb(88, 0, 0)"
+            }
         })
     });
 
@@ -285,6 +290,15 @@ function tableau(arr) {
     let btnTri = document.querySelectorAll('.btntri');
     btnTri.forEach(el => {
         el.addEventListener('click', function () {
+            //sauvegarder la ligne colorée
+            let rows = document.querySelectorAll('tr');
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i].style.backgroundColor == "rgb(88, 0, 0)") {
+                    save = rows[i].dataset.number;
+                }
+            }
+
+            //trier le tableau
             let arrT;
             if (modulo[this.id] % 2 == 0) {
                 if (this.id != 'hauteurenm' && this.id != 'circonferenceencm') {
@@ -304,7 +318,16 @@ function tableau(arr) {
                 }
                 modulo[this.id]++;
             }
+            //rafraichir le tableau
             tableau(arrT);
+
+            //récupérer la ligne colorée
+            let row2 = document.querySelectorAll('tr');
+            for (let i = 1; i < row2.length; i++) {
+                if (row2[i].dataset.number == save) {
+                    row2[i].style.backgroundColor = "rgb(88, 0, 0)";
+                }
+            }
         });
     });
 }
@@ -451,7 +474,7 @@ function creerSelectsCirconf(ids, lab) {
 
 //au click du bouton de la page d'intro, affichage et création de la totalité
 btnIntro.addEventListener('click', async function () {
-    
+
     //récupération données
     let url = `https://opendata.paris.fr/api/records/1.0/search/?dataset=arbresremarquablesparis&q=&rows=10000&facet=libellefrancais&facet=genre&facet=espece&facet=stadedeveloppement&facet=varieteoucultivar&facet=dateplantation`;
     const data = await fetch(url);
@@ -498,12 +521,12 @@ btnIntro.addEventListener('click', async function () {
             map.addImage('tree', image);
         }
     )
-    
+
     //création select
     creerSelects(json, 'selectgenre', 'genre', 'Genre')
     creerSelects(json, 'selectfrance', 'libellefrancais', 'Nom français');
     creerSelectsCirconf(['selectmin', 'selectmax'], ['Circonférence min', 'Circonférence max']);
-    
+
     //création données
     await createData('tout');
 
