@@ -279,6 +279,7 @@ function tableau(arr) {
                 myPopUp.remove();
             }
             else {
+                coloriseRow();
                 this.style.backgroundColor = "rgb(88, 0, 0)"
             }
         })
