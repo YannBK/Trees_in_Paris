@@ -11,18 +11,34 @@ let save; //pour garder la ligne colorée lors d'un tri
 
 //class pour création des arbres => finiront dans arrArbres, qui finira dans les datas à afficher
 class Arbres {
-    constructor(adresse, circonf, date, esp, genre, haut, francais, coord, variete, id) {
+    constructor(adresse, circonf, date, esp, genre, haut, francais, coord, variete, image, id) {
         this.type = 'Feature',
             this.properties = {
                 description:
-                    `<h3>${genre} ${esp} ${variete}</h3><p>${francais}</p><p>Adresse : ${adresse}</p><p>Hauteur : ${haut}m, Circonférence : ${circonf}cm</p><p>Année de plantation : ${date}</p>`,
-
+                    `<div><h3>${genre} ${esp} ${variete}</h3><img src="./media/arbre/${image}.jpg" onclick="openModal()"></div><p>${francais}</p><p>Adresse : ${adresse}</p><p>Hauteur : ${haut}m, Circonférence : ${circonf}cm</p><p>Année de plantation : ${date}</p>`,
             },
             this.geometry = {
                 type: 'Point',
                 coordinates: coord
             }
         this.id = id
+    }
+}
+
+//fonction qui ouvre le modal pour image agrandie
+function openModal(e){
+    let ev = e || window.event;
+    let url = ev.target.src;
+
+    let modal = document.getElementById('myModal');
+    modal.style.display = "flex";
+    let content = document.querySelector('.modal-content');
+
+    content.innerHTML = `<span id="close">&times;</span><img src="${url}" >`;
+    
+    let span = document.getElementById('close');
+    span.onclick = function() {
+        modal.style.display = "none";
     }
 }
 
@@ -44,7 +60,7 @@ function coloriseRow() {
 
 //mise à jour de la map
 function miseAJour(src) {
-    if (src != 1) {
+    if (src != 1 && src != 0) {
         map.removeLayer(`${src - 1}`);
     }
     map.addSource(`${src}`, {
@@ -99,6 +115,7 @@ async function createData(tri) {
     let url = `https://opendata.paris.fr/api/records/1.0/search/?dataset=arbresremarquablesparis&q=&rows=10000&facet=libellefrancais&facet=genre&facet=espece&facet=stadedeveloppement&facet=varieteoucultivar&facet=dateplantation`;
     const data = await fetch(url);
     const json = await data.json();
+    const arrImage = ["vide","108256","102837","2002398","2002397","2002350","2002353","113571","136310","101752","110934","106981","113328","113547","114140","124358","267663","102141","123805","127998","135397","136527","230281","235972","302598","313940","2013640","136321"]
     // console.log(json);
 
     //création des objets
@@ -110,31 +127,45 @@ async function createData(tri) {
         let variet = "";
         let annee = "";
         let arbre;
+        let adress = titleCase(json.records[i].fields.adresse);
+        let image = arrImage[0];
+        //reformatage adresse
+        if (json.records[i].fields.adresse.includes(' D ')) {
+            adress = titleCase(json.records[i].fields.adresse.replace(' D ', " D'"));
+        }
+        else if (json.records[i].fields.adresse.includes(' L ')) {
+            adress = titleCase(json.records[i].fields.adresse.replace(' L ', " L'"));
+        }
         //reformatage de la date
         for (let k = 0; k < 4; k++) {
             annee += json.records[i].fields.dateplantation[k];
         }
+        //variété si il y a lieu
+        if (json.records[i].fields.varieteoucultivar != undefined) {
+            variet = json.records[i].fields.varieteoucultivar;
+        }
+        //image si elle existe
+        for (let k = 0; k<arrImage.length;k++){
+            if (json.records[i].fields.idbase == arrImage[k]){
+                image = arrImage[k];
+            }
+        }
+        //tri par circonférence
         if (json.records[i].fields.circonferenceencm >= selectMin && json.records[i].fields.circonferenceencm <= selectMax) {
             //pour afficher tous les arbres
             if (tri == 'tout') {
-                //gérer les variétés
-                if (json.records[i].fields.varieteoucultivar != undefined) {
-                    variet = json.records[i].fields.varieteoucultivar;
-                }
-                arbre = new Arbres(json.records[i].fields.adresse, json.records[i].fields.circonferenceencm, annee, json.records[i].fields.espece, json.records[i].fields.genre, json.records[i].fields.hauteurenm, json.records[i].fields.libellefrancais, json.records[i].geometry.coordinates, variet, i);
+
+                arbre = new Arbres(adress, json.records[i].fields.circonferenceencm, annee, json.records[i].fields.espece, json.records[i].fields.genre, json.records[i].fields.hauteurenm, json.records[i].fields.libellefrancais, json.records[i].geometry.coordinates, variet, image, i);
 
                 //pour l'affichage du tableau
                 arrArbresTableau.push([i, json.records[i].fields]);
             }
 
-            //lorsqu'un tri est demandé
+            //lorsqu'un tri d'espèce est demandé
             else {
                 if (Object.values(json.records[i].fields).includes(tri)) {
-                    //gérer les variétés
-                    if (json.records[i].fields.varieteoucultivar != undefined) {
-                        variet = json.records[i].fields.varieteoucultivar;
-                    }
-                    arbre = new Arbres(json.records[i].fields.adresse, json.records[i].fields.circonferenceencm, annee, json.records[i].fields.espece, json.records[i].fields.genre, json.records[i].fields.hauteurenm, json.records[i].fields.libellefrancais, json.records[i].geometry.coordinates, variet, i);
+
+                    arbre = new Arbres(adress, json.records[i].fields.circonferenceencm, annee, json.records[i].fields.espece, json.records[i].fields.genre, json.records[i].fields.hauteurenm, json.records[i].fields.libellefrancais, json.records[i].geometry.coordinates, variet, image, i);
 
                     //pour l'affichage du tableau
                     arrArbresTableau.push([i, json.records[i].fields]);
@@ -229,7 +260,7 @@ function tableau(arr) {
         if (el[1].adresse.includes(' D ')) {
             adress = titleCase(el[1].adresse.replace(' D ', " D'"));
         }
-        else if (el[1].adresse.includes('L ')) {
+        else if (el[1].adresse.includes(' L ')) {
             adress = titleCase(el[1].adresse.replace(' L ', " L'"));
         }
         //reformatage domanialité
@@ -372,7 +403,10 @@ function creerSelects(obj, id, cat, lab) {
     opti.textContent = 'Tout';
 
     htmlSelectGenre.appendChild(opti);
-
+    htmlSelectGenre.value = "tout";
+    if(check.id=="checkselectgenre"){
+        check.checked = true;
+    }
     //tableau de la catégorie concernée
     let arrConst = [];
     for (let i = 0; i < obj.records.length; i++) {
@@ -418,7 +452,7 @@ function creerSelectsCirconf(ids, lab) {
         htmlSelectGenre.setAttribute('id', ids[i]);
 
         //création options
-        for (let k = 0; k < 701; k += 50) {
+        for (let k = 0; k < 701; k += 100) {
             if ((ids[i] == 'selectmin' && k != 700) || (ids[i] == 'selectmax' && k != 0)) {
                 let opt = document.createElement('option');
                 opt.setAttribute('value', `${k}`);
@@ -458,10 +492,10 @@ function creerSelectsCirconf(ids, lab) {
             let selectMax = document.getElementById('selectmax');
             if (parseInt(selectMin.value) >= parseInt(selectMax.value)) {
                 if (this.id == "selectmin") {
-                    selectMax.value = `${parseInt(selectMin.value) + 50}`;
+                    selectMax.value = `${parseInt(selectMin.value) + 100}`;
                 }
                 else {
-                    selectMin.value = `${parseInt(selectMax.value) - 50}`;
+                    selectMin.value = `${parseInt(selectMax.value) - 100}`;
                 }
             }
 
@@ -516,7 +550,7 @@ btnIntro.addEventListener('click', async function () {
 
     //changement icone
     map.loadImage(
-        '22330deciduoustree_98753.png',
+        './media/icone.png',
         (error, image) => {
             if (error) throw error;
             map.addImage('tree', image);
@@ -528,17 +562,24 @@ btnIntro.addEventListener('click', async function () {
     creerSelects(json, 'selectfrance', 'libellefrancais', 'Nom français');
     creerSelectsCirconf(['selectmin', 'selectmax'], ['Circonférence min', 'Circonférence max']);
 
-    //création données
-    await createData('tout');
 
-    //animations fun, ou pas
+    
+    // animations fun, ou pas
     btnIntro.style.animation = "disparition 0.5s linear forwards";
     setTimeout(function () {
-        resultat.style.animation = "apparition 2.5s linear forwards";//c'est mon PC ou ce n'est pas fluide, il y avait un truc pour ça...
+        resultat.style.animation = "apparition 1s ease-out forwards";
         btnIntro.style.display = "none";
     }, 500)
 
-    //affichage
-    miseAJour(source);
-    tableau(arrArbresTableau);
+//bon, ça m'a l'air bon...à voir demain
+    async function dansLordre(){
+        //création données
+        await createData('tout');
+        //affichage
+        miseAJour(source);
+        tableau(arrArbresTableau);
+
+    };
+    dansLordre();
+    
 })

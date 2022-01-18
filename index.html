@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--js-->
+    <script type="text/javascript" src="./api.js" defer></script>
     <!--CSS-->
     <link rel="stylesheet" href="./api.css">
     <!--Mapbox-->
@@ -18,8 +20,8 @@
 </head>
 
 <body>
-    <video playsinline autoplay muted loop poster="./fond.PNG" id="bgvid">
-        <source src="./trees-84143_A6Alyd98.mp4" type="video/mp4">
+    <video playsinline autoplay muted loop poster="./media/fond.PNG" id="bgvid">
+        <source src="./media/video_trees.mp4" type="video/mp4">
         <!--auteur : josephphackney de pixabay-->
     </video>
 
@@ -35,6 +37,9 @@
         <div id="tableau"></div>
     </div>
 
-    <script src="./api.js"></script>
+    <div id="myModal" class="modal">
+        <div class="modal-content"></div>
+    </div>
+    <!-- <script type="text/javascript" src="./api.js"></script> -->
 </body>
 </html>
