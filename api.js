@@ -334,7 +334,7 @@ function tableau(arr) {
 
         let ligne = "";
         if (document.body.clientWidth < 1000) {
-            ligne = `<td>${adress}</td><td>${arrond}</td><td>${el[1].libellefrancais}</td><td>${el[1].genre}</td><td>${el[1].espece}</td><td>${toString(el[1].hauteurenm)}</td><td>${el[1].circonferenceencm}</td><td>${annee}</td>`;
+            ligne = `<td>${adress}</td><td>${arrond}</td><td>${el[1].libellefrancais}</td><td>${el[1].genre}</td><td>${el[1].espece}</td><td>${el[1].hauteurenm}</td><td>${el[1].circonferenceencm}</td><td>${annee}</td>`;
         }
         else {
             ligne = `<td>${adress}</td><td>${arrond}</td><td>${el[1].libellefrancais}</td><td>${el[1].genre}</td><td>${el[1].espece}</td><td>${variet}</td><td>${el[1].hauteurenm}</td><td>${el[1].circonferenceencm}</td><td>${annee}</td><td>${domain}</td>`;
