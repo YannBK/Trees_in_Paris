@@ -490,7 +490,9 @@ function creerSelects(obj, id, cat, lab) {
     //écouteur du select à l'input
     const selectGenre = document.getElementById(id);
     selectGenre.addEventListener('input', async function () {
-        myPopUp.remove();
+        if (myPopUp != undefined) {
+            myPopUp.remove();
+        }
         let value = this.value;
         await createData(value);
         miseAJour(source);
@@ -533,7 +535,9 @@ function creerSelectsCirconf(ids, lab) {
         //écouteur du select à l'input
         const selectGenre = document.getElementById(ids[i]);
         selectGenre.addEventListener('change', async function () {
-            myPopUp.remove();
+            if (myPopUp != undefined) {
+                myPopUp.remove();
+            }
             //appliquer le range à l'input arbre visible
             let value;
             if (document.getElementById('checkselectgenre').checked == true) {
