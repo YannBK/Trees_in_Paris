@@ -8,14 +8,30 @@ let arrArbresTableau = []; //données pour tableau
 let arrArbres = []; //données pour datas
 let myPopUp; //pour mise à jour des popup de la map
 let save; //pour garder la ligne colorée lors d'un tri
+let geoUser = [];//localisation de l'utilisateur
+let distance;
+
+//pour trier le tableau => cf tableau()
+let modulo = {
+    "adresse": 0,
+    "arrondissement": 0,
+    "libellefrancais": 0,
+    "genre": 0,
+    "espece": 0,
+    "varieteoucultivar": 0,
+    "hauteurenm": 0,
+    "circonferenceencm": 0,
+    "dateplantation": 0,
+    "domanialite": 0
+}
 
 //class pour création des arbres => finiront dans arrArbres, qui finira dans les datas à afficher
 class Arbres {
-    constructor(adresse, circonf, date, esp, genre, haut, francais, coord, variete, image, id) {
+    constructor(adresse, circonf, date, esp, genre, haut, francais, coord, variete, image, distance, id) {
         this.type = 'Feature',
             this.properties = {
                 description:
-                    `<div><h3>${genre} ${esp} ${variete}</h3><img src="./media/arbre/${image}.jpg" onclick="openModal()"></div><p>${francais}</p><p>Adresse : ${adresse}</p><p>Hauteur : ${haut}m, Circonférence : ${circonf}cm</p><p>Année de plantation : ${date}</p>`,
+                    `<div><h3>${genre} ${esp} ${variete}</h3><img src="./media/arbre/${image}.jpg" onclick="openModal()"></div><p>${francais}</p><p>Adresse : ${adresse}</p>${distance}<p>Hauteur : ${haut}m, Circonférence : ${circonf}cm</p><p>Année de plantation : ${date}</p>`,
             },
             this.geometry = {
                 type: 'Point',
@@ -25,7 +41,55 @@ class Arbres {
     }
 }
 
-//fonction qui ouvre le modal pour image agrandie
+
+// geolocalisation de l'utilisateur
+if (navigator.geolocation) {
+    console.debug('geolocalisation en cours...'); 
+    navigator.geolocation.getCurrentPosition(getPosition, getError); 
+} 
+ else 
+    alert("La géolocalisation n'est pas disponible avec votre navigateur.");
+ 
+function getPosition(position) { 
+    geoUser = [position.coords.longitude, position.coords.latitude];
+} 
+ 
+function getError(error) {
+    switch(error.code) { 
+    case error.PERMISSION_DENIED: 
+       alert("Vous avez refusé la géolocalisation.")
+       break;
+    default: 
+       alert("Votre géolocalisation est impossible...");
+    } 
+}; 
+
+function distanceParCoord(arrus,arrar) {
+    let a=arrus[1];//lat pt1
+    let b=arrus[0]; //long pt 1
+    let c=arrar[1]; //lat pt2
+    let d=arrar[0]; //long pt2 
+
+    let e=(3.14159265358979*a/180); 
+    let f=(3.14159265358979*b/180); 
+    let g=(3.14159265358979*c/180);
+    let h=(3.14159265358979*d/180);
+
+    let i=(Math.cos(e)*Math.cos(g)*Math.cos(f)*Math.cos(h)+Math.cos(e)*Math.sin(f)*Math.cos(g)*Math.sin(h)+Math.sin(e)*Math.sin(g)); 
+    // let i = (Math.sin(e)*Math.sin(g)+Math.cos(e)*Math.cos(g)*Math.cos(f-h))
+    let j=(Math.acos(i));
+    let distanceInt=Math.round(6371*j*1000);
+
+    if(distanceInt>1000){
+        distance = `<p>Vous êtes à ${(distanceInt/1000).toFixed(1)} km</p>`;
+    }
+    else{
+        distance = `<p>Vous êtes à ${distanceInt} m</p>`
+    }
+    return distance;
+}
+
+//fonction qui ouvre et ferme le modal pour image agrandie
 function openModal(e){
     let ev = e || window.event;
     let url = ev.target.src;
@@ -56,6 +120,12 @@ function coloriseRow() {
             oldRow.style.backgroundColor = "rgb(17, 17, 17)";
         }
     }
+}
+
+//Pour Formater Les String En Title Case => cf tableau()
+function titleCase(str) {
+    return str.split(' ').map(item =>
+        item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(' ');
 }
 
 //mise à jour de la map
@@ -129,6 +199,13 @@ async function createData(tri) {
         let arbre;
         let adress = titleCase(json.records[i].fields.adresse);
         let image = arrImage[0];
+        //calcul distance
+        if(geoUser.length == 2){
+            distanceParCoord(geoUser, json.records[i].geometry.coordinates);
+        }
+        else{
+            distance = "";
+        }
         //reformatage adresse
         if (json.records[i].fields.adresse.includes(' D ')) {
             adress = titleCase(json.records[i].fields.adresse.replace(' D ', " D'"));
@@ -155,7 +232,7 @@ async function createData(tri) {
             //pour afficher tous les arbres
             if (tri == 'tout') {
 
-                arbre = new Arbres(adress, json.records[i].fields.circonferenceencm, annee, json.records[i].fields.espece, json.records[i].fields.genre, json.records[i].fields.hauteurenm, json.records[i].fields.libellefrancais, json.records[i].geometry.coordinates, variet, image, i);
+                arbre = new Arbres(adress, json.records[i].fields.circonferenceencm, annee, json.records[i].fields.espece, json.records[i].fields.genre, json.records[i].fields.hauteurenm, json.records[i].fields.libellefrancais, json.records[i].geometry.coordinates, variet, image, distance, i);
 
                 //pour l'affichage du tableau
                 arrArbresTableau.push([i, json.records[i].fields]);
@@ -165,7 +242,7 @@ async function createData(tri) {
             else {
                 if (Object.values(json.records[i].fields).includes(tri)) {
 
-                    arbre = new Arbres(adress, json.records[i].fields.circonferenceencm, annee, json.records[i].fields.espece, json.records[i].fields.genre, json.records[i].fields.hauteurenm, json.records[i].fields.libellefrancais, json.records[i].geometry.coordinates, variet, image, i);
+                    arbre = new Arbres(adress, json.records[i].fields.circonferenceencm, annee, json.records[i].fields.espece, json.records[i].fields.genre, json.records[i].fields.hauteurenm, json.records[i].fields.libellefrancais, json.records[i].geometry.coordinates, variet, image, distance, i);
 
                     //pour l'affichage du tableau
                     arrArbresTableau.push([i, json.records[i].fields]);
@@ -192,26 +269,6 @@ async function createData(tri) {
     }
 
     return arrArbres, arrArbresTableau;
-}
-
-//Pour Formater Les String En Title Case => cf tableau()
-function titleCase(str) {
-    return str.split(' ').map(item =>
-        item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(' ');
-}
-
-//pour trier le tableau => cf tableau()
-let modulo = {
-    "adresse": 0,
-    "arrondissement": 0,
-    "libellefrancais": 0,
-    "genre": 0,
-    "espece": 0,
-    "varieteoucultivar": 0,
-    "hauteurenm": 0,
-    "circonferenceencm": 0,
-    "dateplantation": 0,
-    "domanialite": 0
 }
 
 //création tableau des données affichées
@@ -433,6 +490,7 @@ function creerSelects(obj, id, cat, lab) {
     //écouteur du select à l'input
     const selectGenre = document.getElementById(id);
     selectGenre.addEventListener('input', async function () {
+        myPopUp.remove();
         let value = this.value;
         await createData(value);
         miseAJour(source);
@@ -475,6 +533,7 @@ function creerSelectsCirconf(ids, lab) {
         //écouteur du select à l'input
         const selectGenre = document.getElementById(ids[i]);
         selectGenre.addEventListener('change', async function () {
+            myPopUp.remove();
             //appliquer le range à l'input arbre visible
             let value;
             if (document.getElementById('checkselectgenre').checked == true) {
@@ -547,6 +606,7 @@ btnIntro.addEventListener('click', async function () {
 
     //ajout contrôles
     map.addControl(new mapboxgl.NavigationControl());
+    map.addControl(new mapboxgl.ScaleControl({position: 'bottom-left'}));
 
     //changement icone
     map.loadImage(
@@ -562,8 +622,6 @@ btnIntro.addEventListener('click', async function () {
     creerSelects(json, 'selectfrance', 'libellefrancais', 'Nom français');
     creerSelectsCirconf(['selectmin', 'selectmax'], ['Circonférence min', 'Circonférence max']);
 
-
-    
     // animations fun, ou pas
     btnIntro.style.animation = "disparition 0.5s linear forwards";
     setTimeout(function () {
@@ -583,3 +641,5 @@ btnIntro.addEventListener('click', async function () {
     dansLordre();
     
 })
+
+
